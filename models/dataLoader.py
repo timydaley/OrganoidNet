@@ -7,11 +7,10 @@ import os
 
 class OrganoidDataset(data.Dataset):
   'dataset class for microwell organoid images'
-  def __init__(self, path2files, microwell_labels, well_labels, day_label_X, sizes):
+  def __init__(self, path2files, microwell_labels, day_label_X, sizes):
     assert len(microwell_labels) == len(well_labels) && len(well_labels) == len(sizes) && len(day_label_X) == len(sizes)
     self.path = path2files
     self.mw_labels = microwell_labels
-    self.well_labels = well_labels
     self.day_label_X = day_label_X
     self.sizes = sizes
   def __len__(self):
