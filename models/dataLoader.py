@@ -7,16 +7,18 @@ import os
 
 class OrganoidDataset(data.Dataset):
   'dataset class for microwell organoid images'
-  def __init__(self, path2files, microwell_labels, day_label_X, sizes):
-    assert len(microwell_labels) == len(well_labels) && len(well_labels) == len(sizes) && len(day_label_X) == len(sizes)
+  def __init__(self, path2files, well_labels, day_label_X, sizes):
+    assert len(well_labels) == len(sizes)
+    assert len(day_label_X) == len(sizes)
     self.path = path2files
-    self.mw_labels = microwell_labels
+    #self.mw_labels = microwell_labels
+    self.well_labels = well_labels
     self.day_label_X = day_label_X
     self.sizes = sizes
   def __len__(self):
-    return self.well_label
+    return len(self.sizes)
   def __getXimage__(self, index):
-    img_name = 'well' + str(self.microwell_label[index]) + '_day' + str(self.day_label_X[index]) + '_well.png'
+    img_name = 'well' + str(self.well_labels[index]) + '_day' + str(self.day_label_X[index]) + '_well.png'
     img_loc = os.path.join(self.path, img_name)
     # skimage.io.imread returns a numpy array
     image = io.imread(img_loc)
