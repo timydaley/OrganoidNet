@@ -13,7 +13,9 @@ device = torch.device("cuda:0" if use_cuda else "cpu")
 
 params = {'batch_size': 20, # low for testing
           'shuffle': True, 'num_workers' : 1}
+
 max_epochs = 20
+
 path = '/Users/Daley/Teaching/CS231N/CS231Nproject/CS231n_Tim_Shan_example_data/' # need to change
 
 well_descriptions = pandas.read_csv('/Users/Daley/Teaching/CS231N/CS231Nproject/well_summary_A1_e0891BSA_all.csv', sep=',', header=0) # need to change name
@@ -21,7 +23,7 @@ well_descriptions = pandas.read_csv('/Users/Daley/Teaching/CS231N/CS231Nproject/
 #sizes = well_descriptions['mw_area shape'].tolist()
 day0wells = well_descriptions[(well_descriptions['day'] == 0)]
 day13wells = well_descriptions[(well_descriptions['day'] == 13)]
-finalSizes = day13wells['mw_area shape']
+finalSizes = day13wells['mw_area shape'].values
 
 well_labels = []
 for i in range(4800):
@@ -69,17 +71,20 @@ train_error_array = np.zeros(max_epochs)
 # Loop over epochs
 for epoch in range(max_epochs):
   # Training
+  print(epoch)
   optimizer.zero_grad()
   totalbatchMSE = 0.0
   for local_X, local_Y in training_generator:
     local_X, local_Y = local_X.to(device), local_Y.to(device)
-    Y_hat = model.run_all_forward(local_X)
+    Y_hat = model.forward(local_X)
     train_error = loss(Y_hat, local_Y)
     train_error.backward()
     optimizer.step()
     model.eval() # set evaluation mode
-    Y_hat = model.run_all_forward(local_X)
+    Y_hat = model.forward(local_X)
     train_error = loss(Y_hat, local_Y).item()
     totalbatchMSE = totalbatchMSE + params['batch_size']*train_error/4800 # rescale train_error
     train_error_array[epoch] = totalbatchMSE
+
+np.savetxt(fname = "train_error_array.txt", train_error_array)
 

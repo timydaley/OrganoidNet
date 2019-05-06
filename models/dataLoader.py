@@ -24,12 +24,13 @@ class OrganoidDataset(data.Dataset):
     image = io.imread(img_loc)
     # swap color axis because numpy image: HxWxC but torch image: CxHxW                                                                                                                          
     image = image.transpose((2, 0, 1))
-    return torch.from_numpy(image)
-  def getYsize(self, index):
-    return self.sizes[index]
+    return torch.from_numpy(image).float()
+  def getY(self, index):
+    Y = self.sizes[index]
+    return torch.from_numpy(np.asarray(self.sizes[index], dtype=float)).float()
   def __getitem__(self, index):
     X = self.getXimage(index)
-    y = self.getYsize(index)
+    y = self.getY(index)
     return X, y
   
 
