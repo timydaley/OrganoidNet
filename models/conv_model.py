@@ -86,5 +86,5 @@ for epoch in range(max_epochs):
     totalbatchMSE = totalbatchMSE + params['batch_size']*train_error/4800 # rescale train_error
     train_error_array[epoch] = totalbatchMSE
 
-np.savetxt(fname = "train_error_array.txt", train_error_array)
+np.savetxt(fname = "train_error_array.txt", X = train_error_array)
 
