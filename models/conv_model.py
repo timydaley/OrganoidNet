@@ -43,36 +43,43 @@ training_generator = data.DataLoader(initial_train_set, **params)
 class SimpleConvNet(nn.Module):
   def __init__(self, in_channels = 4, layer1channels = 16, layer2channels = 16, out_size = 1):
     super(SimpleConvNet, self).__init__()
-      self.layer1 = nn.Sequential(
-                                  nn.Conv2d(in_channels, layer1channels,
-                                            kernel_size=5, stride=1, padding=2),
-                                  nn.BatchNorm2d(layer1channels),
-                                  nn.ReLU()#,nn.MaxPool2d(kernel_size=2, stride=2)
-                                  )
-        self.layer2 = nn.Sequential(
-                                    nn.Conv2d(layer1channels, layer2channels,
-                                              kernel_size=5, stride=1, padding=2),
-                                    nn.BatchNorm2d(layer2channels),
-                                    nn.ReLU()#,nn.MaxPool2d(kernel_size=2, stride=2)
-                                    )
-        self.fc = nn.Linear(in_features = 193*193*layer2channels, out_features = out_size)
-    
-    def forward(self, x):
-      out = self.layer1(x)
-      out = self.layer2(out)
-      out = out.reshape(out.size(0), -1)
-      out = self.fc(out)
-      return out
+    self.layer1 = nn.Sequential(nn.Conv2d(in_channels, layer1channels,
+                                          kernel_size=5, stride=1, padding=2),
+                                nn.BatchNorm2d(layer1channels),
+                                nn.ReLU())
+    self.layer2 = nn.Sequential(nn.Conv2d(layer1channels, layer2channels,
+                                          kernel_size=5, stride=1, padding=2),
+                                nn.BatchNorm2d(layer2channels),
+                                nn.ReLU())
+    self.fc = nn.Linear(in_features = 193*193*layer2channels, out_features = out_size)
+  def forward(self, x):
+    out = self.layer1(x)
+    out = self.layer2(out)
+    out = out.reshape(out.size(0), -1)
+    out = self.fc(out)
+    return out
 
 in_channels = 4
 out_size = 1
 model = SimpleConvNet(in_channels = in_channels, out_size = out_size).to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=10**-8, weight_decay=0)
 loss = nn.MSELoss()
-train_error_array = numpy.zeros(num_epochs)
+train_error_array = np.zeros(max_epochs)
 
 # Loop over epochs
 for epoch in range(max_epochs):
   # Training
-  for local_batch, local_labels in training_generator:
-    local_batch, local_labels = local_batch.to(device), local_labels.to(device)
+  optimizer.zero_grad()
+  totalbatchMSE = 0.0
+  for local_X, local_Y in training_generator:
+    local_X, local_Y = local_X.to(device), local_Y.to(device)
+    Y_hat = model.run_all_forward(local_X)
+    train_error = loss(Y_hat, local_Y)
+    train_error.backward()
+    optimizer.step()
+    model.eval() # set evaluation mode
+    Y_hat = model.run_all_forward(local_X)
+    train_error = loss(Y_hat, local_Y).item()
+    totalbatchMSE = totalbatchMSE + params['batch_size']*train_error/4800 # rescale train_error
+    train_error_array[epoch] = totalbatchMSE
+

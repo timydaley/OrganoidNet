@@ -17,7 +17,7 @@ class OrganoidDataset(data.Dataset):
     self.sizes = sizes
   def __len__(self):
     return len(self.sizes)
-  def __getXimage__(self, index):
+  def getXimage(self, index):
     img_name = 'well' + str(self.well_labels[index]) + '_day' + str(self.day_label_X[index]) + '_well.png'
     img_loc = os.path.join(self.path, img_name)
     # skimage.io.imread returns a numpy array
@@ -25,8 +25,8 @@ class OrganoidDataset(data.Dataset):
     # swap color axis because numpy image: HxWxC but torch image: CxHxW                                                                                                                          
     image = image.transpose((2, 0, 1))
     return torch.from_numpy(image)
-  def __getYsize__(self, index):
-    return self.sizes[indx]
+  def getYsize(self, index):
+    return self.sizes[index]
   def __getitem__(self, index):
     X = self.getXimage(index)
     y = self.getYsize(index)
