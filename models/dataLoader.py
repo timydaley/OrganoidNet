@@ -1,4 +1,4 @@
-from skimage import io, transform
+from skimage import io, transform, color
 import numpy as np
 import torch
 from torch.utils import data
@@ -22,8 +22,10 @@ class OrganoidDataset(data.Dataset):
     img_loc = os.path.join(self.path, img_name)
     # skimage.io.imread returns a numpy array
     image = io.imread(img_loc)
-    # swap color axis because numpy image: HxWxC but torch image: CxHxW                                                                                                                          
-    image = image.transpose((2, 0, 1))
+    # convert to grey scale
+    image = color.rgb2gray(image)
+    # add color axis because torch image: CxHxW
+    image = np.reshape(image, newshape = (1, image.shape[0], image.shape[1]))
     return torch.from_numpy(image).float()
   def getY(self, index):
     Y = self.sizes[index]
