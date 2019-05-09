@@ -11,7 +11,7 @@ from dataLoader import OrganoidDataset
 use_cuda = torch.cuda.is_available()
 device = torch.device("cuda:0" if use_cuda else "cpu")
 
-params = {'batch_size': 20, # low for testing
+params = {'batch_size': 100, # low for testing
           'shuffle': True, 'num_workers' : 1}
 
 max_epochs = 200
@@ -63,7 +63,7 @@ class SimpleConvNet(nn.Module):
 in_channels = 4
 out_size = 1
 model = SimpleConvNet(in_channels = in_channels, out_size = out_size).to(device)
-optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=10**-8, weight_decay=0)
+optimizer = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=10**-8, weight_decay=0)
 loss = nn.MSELoss()
 train_error_array = np.zeros(max_epochs)
 
