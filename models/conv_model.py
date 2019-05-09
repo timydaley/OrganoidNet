@@ -35,14 +35,14 @@ for i in range(4800):
     i2str = '0' + i2str
   well_labels.append(i2str)
 
-initial_train_set = OrganoidDataset(path2files = path, well_labels = well_labels, day_label_X = ['00']*4800, sizes = finalSizes)
+initial_train_set = OrganoidDataset(path2files = path, well_labels = well_labels[0:1000], day_label_X = ['01']*1000, sizes = finalSizes[0:1000])
 training_generator = data.DataLoader(initial_train_set, **params)
 
 
 
 # Convolutional neural network (two convolutional layers)
 class SimpleConvNet(nn.Module):
-  def __init__(self, in_channels = 4, layer1channels = 16, layer2channels = 16, out_size = 1):
+  def __init__(self, in_channels = 1, layer1channels = 16, layer2channels = 16, out_size = 1):
     super(SimpleConvNet, self).__init__()
     self.layer1 = nn.Sequential(nn.Conv2d(in_channels, layer1channels,
                                           kernel_size=5, stride=1, padding=2),
@@ -60,7 +60,7 @@ class SimpleConvNet(nn.Module):
     out = self.fc(out)
     return out
 
-in_channels = 4
+in_channels = 1
 out_size = 1
 model = SimpleConvNet(in_channels = in_channels, out_size = out_size).to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=10**-8, weight_decay=0)
