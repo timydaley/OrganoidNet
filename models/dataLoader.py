@@ -26,8 +26,8 @@ class OrganoidDataset(data.Dataset):
     # skimage.io.imread returns a numpy array
     image = io.imread(img_loc)
     # convert to grey scale
-    image = np.true_divide(color.rgb2gray(image) - self.intensity_mean),
-                           math.sqrt(self.intensity_var)
+    image = np.true_divide(color.rgb2gray(image) - self.intensity_mean,
+                           math.sqrt(self.intensity_var))
     # add color axis because torch image: CxHxW
     image = np.reshape(image, newshape = (1, image.shape[0], image.shape[1]))
     return torch.from_numpy(image).float()
