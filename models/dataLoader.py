@@ -17,13 +17,13 @@ class OrganoidDataset(data.Dataset):
     self.sizes = sizes
   def __len__(self):
     return len(self.sizes)
-  def getXimage(self, index):
+  def getXimage(self, index, intensity_mean = 0.5, intensity_var = 0.025):
     img_name = 'well' + str(self.well_labels[index]) + '_day' + str(self.day_label_X[index]) + '_well.png'
     img_loc = os.path.join(self.path, img_name)
     # skimage.io.imread returns a numpy array
     image = io.imread(img_loc)
     # convert to grey scale
-    image = color.rgb2gray(image)
+    image = (color.rgb2gray(image) - intensity_mean)/sqrt(intensity_var)
     # add color axis because torch image: CxHxW
     image = np.reshape(image, newshape = (1, image.shape[0], image.shape[1]))
     return torch.from_numpy(image).float()
