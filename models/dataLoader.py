@@ -16,8 +16,8 @@ class OrganoidDataset(data.Dataset):
     self.well_labels = well_labels
     self.day_label_X = day_label_X
     self.sizes = sizes
-    self.intensity_mean = intensity_mean
-    self.intensity_var = intensity_var
+    self.mean = intensity_mean
+    self.sd = math.sqrt(intensity_var)
   def __len__(self):
     return len(self.sizes)
   def getXimage(self, index):
@@ -26,8 +26,7 @@ class OrganoidDataset(data.Dataset):
     # skimage.io.imread returns a numpy array
     image = io.imread(img_loc)
     # convert to grey scale
-    image = np.true_divide(color.rgb2gray(image) - self.intensity_mean,
-                           math.sqrt(self.intensity_var))
+    image = np.true_divide(color.rgb2gray(image) - self.mean, self.sd)
     # add color axis because torch image: CxHxW
     image = np.reshape(image, newshape = (1, image.shape[0], image.shape[1]))
     return torch.from_numpy(image).float()
