@@ -16,20 +16,23 @@ device = torch.device("cuda:0" if use_cuda else "cpu")
 params = {'batch_size': 100, # low for testing
   'shuffle': True, 'num_workers' : 1}
 
-max_epochs = 200
+max_epochs = 500
 
 #path = '/Users/Daley/Teaching/CS231N/CS231Nproject/CS231n_Tim_Shan_example_data/' # need to change
 path = '../data/CS231n_Tim_Shan_example_data/'
+well_descriptions = pandas.read_csv('filtered_well_descriptions.txt', header=0)
+day1wells = well_descriptions['well_id']
+day1wells = day1wells[well_descriptions['day'] == 1]
+day1wells.shape
+day13wells = well_descriptions['well_id']
+day13wells = day13wells[well_descriptions['day'] == 13]
+day13wells.shape
+daysLabel = pandas.Series(list(set(day13wells) & set(day1wells)))
 
-well_descriptions = pandas.read_csv('processed_well_descriptions.txt', sep='\t', header=0)
-#sizes = well_descriptions['mw_area shape'].tolist()
-day1wells = well_descriptions[(well_descriptions['day'] == 1)]
-day13wells = well_descriptions[(well_descriptions['day'] == 13)]
-finalSizes = day13wells['normalized hyst2 area'].values
 
 well_labels = []
-for i in range(4800):
-  i2str = str(i)
+for i in range(daysLabel.shape[0]):
+  i2str = str(daysLabel[i])
   if len(i2str) == 1:
     i2str = '000' + i2str
   if len(i2str) == 2:
@@ -38,7 +41,15 @@ for i in range(4800):
     i2str = '0' + i2str
   well_labels.append(i2str)
 
-initial_train_set = OrganoidDataset(path2files = path, well_labels = well_labels[0:1000], day_label_X = ['01']*1000, sizes = finalSizes[0:1000])
+day_label_X = ['01']*len(well_labels)
+n = len(well_labels)
+
+finalSizes = well_descriptions['hyst2_area']
+finalSizes = finalSizes[np.logical_and(well_descriptions['day'] == 13, np.isin(well_descriptions['well_id'], daysLabel))].values
+
+day1_mean_and_var = pandas.read_csv('day1_mean_and_var.txt', sep = '\t', header = 0)
+
+initial_train_set = OrganoidDataset(path2files = path, well_labels = well_labels, day_label_X = day_label_X, sizes = finalSizes, intensity_mean = day1_mean_and_var['mean'][0], intensity_var = day1_mean_and_var['variance'][0])
 training_generator = data.DataLoader(initial_train_set, **params)
 
 
@@ -55,10 +66,12 @@ train_error_array = np.zeros(max_epochs)
 for epoch in range(max_epochs):
   # Training
   print(epoch)
-  optimizer.zero_grad()
-  totalbatchMSE = 0.0
+  batchMSE = 0.0
+  batch = 0
+  print('begin training')
   for local_X, local_Y in training_generator:
     local_X, local_Y = local_X.to(device), local_Y.to(device)
+    optimizer.zero_grad()
     Y_hat = model.forward(local_X)
     train_error = loss(Y_hat, local_Y)
     train_error.backward()
@@ -66,7 +79,7 @@ for epoch in range(max_epochs):
     model.eval() # set evaluation mode
     Y_hat = model.forward(local_X)
     train_error = loss(Y_hat, local_Y).item()
-    totalbatchMSE = totalbatchMSE + params['batch_size']*train_error/4800 # rescale train_error, since MSE = \sum sqrt(|Y - hat(Y)|^2) / batch_size
-    train_error_array[epoch] = totalbatchMSE
-    np.savetxt(fname = "train_error_array_lr0.01_3convLayers.txt", X = train_error_array[range(epoch)])
+    batchMSE = train_error
+    train_error_array[epoch] = batchMSE
+    np.savetxt(fname = "train_error_array_max_pool_test.txt", X = train_error_array[range(epoch + 1)])
 
