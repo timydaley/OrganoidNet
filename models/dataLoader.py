@@ -4,6 +4,7 @@ import torch
 from torch.utils import data
 from torchvision import transforms, utils
 import os
+import math
 
 class OrganoidDataset(data.Dataset):
   'dataset class for microwell organoid images'
@@ -23,7 +24,7 @@ class OrganoidDataset(data.Dataset):
     # skimage.io.imread returns a numpy array
     image = io.imread(img_loc)
     # convert to grey scale
-    image = (color.rgb2gray(image) - intensity_mean)/sqrt(intensity_var)
+    image = (color.rgb2gray(image) - intensity_mean)/math.sqrt(intensity_var)
     # add color axis because torch image: CxHxW
     image = np.reshape(image, newshape = (1, image.shape[0], image.shape[1]))
     return torch.from_numpy(image).float()

@@ -6,6 +6,7 @@ import torch.optim as optim
 from torch.utils import data
 import sys
 import pandas
+from conv_model import SimpleConvNet
 from dataLoader import OrganoidDataset
 
 
@@ -17,7 +18,8 @@ params = {'batch_size': 100, # low for testing
 
 max_epochs = 200
 
-path = '/Users/Daley/Teaching/CS231N/CS231Nproject/CS231n_Tim_Shan_example_data/' # need to change
+#path = '/Users/Daley/Teaching/CS231N/CS231Nproject/CS231n_Tim_Shan_example_data/' # need to change
+path = '../data/CS231n_Tim_Shan_example_data/'
 
 well_descriptions = pandas.read_csv('processed_well_descriptions.txt', sep='\t', header=0)
 #sizes = well_descriptions['mw_area shape'].tolist()
