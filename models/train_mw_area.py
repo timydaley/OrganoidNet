@@ -48,17 +48,17 @@ finalSizes = finalSizes[np.logical_and(well_descriptions['day'] == 13, np.isin(w
 
 day1_mean_and_var = pandas.read_csv('mw_area_mean_and_var.txt', sep = '\t', header = 0)
 
-initial_train_set = OrganoidMwAreaDataset(path2files = path, well_labels = well_labels, day_label_X = day_label_X, sizes = finalSizes, intensity_mean = day1_mean_and_var['mean'][0], intensity_var = day1_mean_and_var['variance'][0], max_dim = 132)
+initial_train_set = OrganoidMwAreaDataset(path2files = path, well_labels = well_labels, day_label_X = day_label_X, Y = finalSizes, intensity_mean = day1_mean_and_var['mean'][0], intensity_var = day1_mean_and_var['variance'][0], max_dim = 132)
 training_generator = data.DataLoader(initial_train_set, **params)
 
 
 in_channels = 1
 out_size = 1
-model = SimpleConvNet(in_channels = in_channels, out_size = out_size).to(device)
+model = SimpleConvNet(in_channels = in_channels, out_size = out_size, in_size = 132).to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=10**-8, weight_decay=0)
 loss = nn.MSELoss()
-train_error_array = np.zeros(max_epochs)
-
+batch_error_array = np.zeros(max_epochs)
+avg_error_array = np.zeros(max_epochs)
 
 
 # Loop over epochs
@@ -66,6 +66,7 @@ for epoch in range(max_epochs):
   # Training
   print(epoch)
   batchMSE = 0.0
+  avgMSE = 0.0
   batch = 0
   print('begin training')
   for local_X, local_Y in training_generator:
@@ -79,6 +80,9 @@ for epoch in range(max_epochs):
     Y_hat = model.forward(local_X)
     train_error = loss(Y_hat, local_Y).item()
     batchMSE = train_error
-    train_error_array[epoch] = batchMSE
-    np.savetxt(fname = "train_error_array_max_pool_test.txt", X = train_error_array[range(epoch + 1)])
+    avgMSE = avgMSE + train_error*local_Y.shape[0]/n
+  batch_error_array[epoch] = batchMSE
+  avg_error_array[epoch] = avgMSE
+  np.savetxt(fname = "mw_area_day1_batch_error_lr0.01_eps10minus8.txt", X = batch_error_array[range(epoch + 1)])
+  np.savetxt(fname = "mw_area_day1_avg_error_lr0.01_eps10minus8.txt", X = avg_error_array[range(epoch + 1)])
 

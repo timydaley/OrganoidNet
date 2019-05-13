@@ -63,19 +63,19 @@ class OrganoidMwAreaDataset(data.Dataset):
     image = io.imread(img_loc)
     # convert to grey scale
     image = np.true_divide(color.rgb2gray(image) - self.mean, self.sd)
-    larger_image = np.zeros((max_dim, max_dim))
+    larger_image = np.zeros((self.max_dim, self.max_dim))
     for i in range(image.shape[0]):
       for j in range(image.shape[1]):
         larger_image[i,j] = image[i,j]
     # resize and add color axis because torch image: CxHxW
     larger_image = np.reshape(larger_image, newshape = (1, self.max_dim, self.max_dim))
     # does it matter how the resizing is done?  I don't think so
-    return torch.from_numpy(image).float()
+    return torch.from_numpy(larger_image).float()
   def getY(self, index):
     Y = self.Y[index]
     return torch.from_numpy(np.asarray(self.Y[index], dtype=float)).float()
   def __getitem__(self, index):
-    X = self.getXimage(index)
+    X = self.getAreaImage(index)
     y = self.getY(index)
     return X, y
 
