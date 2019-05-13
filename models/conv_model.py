@@ -26,8 +26,9 @@ class SimpleConvNet(nn.Module):
     self.layer3 = nn.Sequential(nn.Conv2d(layer2channels, layer2channels,
                                           kernel_size=5, stride=1, padding=2),
                                 nn.BatchNorm2d(layer2channels),
-                                nn.ReLU())
-    self.fc = nn.Linear(in_features = 193*193*layer2channels, out_features = out_size)
+                                nn.ReLU(),
+                                nn.MaxPool2d(2))
+    self.fc = nn.Linear(in_features = 193*193*layer2channels/2, out_features = out_size)
   def forward(self, x):
     out = self.layer1(x)
     out = self.layer2(out)
