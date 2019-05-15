@@ -60,7 +60,7 @@ Alexandra Sockell of the Fordyce and Curtis labs in the Genetics department of S
 
 \subsection*{Data}
 
-To achieve the goal of predicting tumor growth, we took the objective as predicting the final size of the tumor after 14 days of growth.  The final size is calculated by image segmentation of the interior of the microwell (Fig\ref{workflow}).  We normalized the sizes to have variance equal to one.  However, we did not mean center the data because we believe a final size equal to zero has meaning.  A final size equal to zero corresponds to either empty wells or cells that died.  
+To achieve the goal of predicting tumor growth, we took the objective as predicting the final size of the tumor after 13 days of growth.  The final size is calculated by image segmentation of the interior of the microwell (Fig\ref{workflow}).  We normalized the sizes to have variance equal to one.  However, we did not mean center the data because we believe a final size equal to zero has meaning.  A final size equal to zero corresponds to either empty wells or cells that died.  
 
 For input we took the day 1 images.  We determined that the day 0 images are not suffcient to predict  All images are black and white, so we converted them to greyscale and normalized the pixels to have zero mean and unit variance.  Our resulting images are 193$\times$193 with a single channel.   An example input image is show in figure~\ref{workflow}.
 
@@ -90,7 +90,13 @@ More details here.
 
 
 
-
+\begin{figure*}[b!]
+\begin{center}
+ \includegraphics[width=0.8\linewidth]{figures/error_vs_epoch_and_validation_predictions_vs_observed.pdf}
+\end{center}
+   \caption{\textbf{a} The training error (blue) and validation error (orange) as a function of training epoch.  \textbf{b} Predicted final size and observed final size, with the index ordered by observed final size. }
+\label{workflow}
+\end{figure*}
 
 
 
