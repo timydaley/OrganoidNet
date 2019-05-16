@@ -104,13 +104,15 @@ As an initial test we use one hundred randomly selected images as a training set
 
 \section{Preliminary Results}
 
-Our preliminary results are poor.  Even for the small dataset of 100 images we can not achieve overfitting.   We tried increasing the number of parameters by doubling the number of channels in each convolutional layer and adding a fully connected layer.  This resulted in $64 \cdot 5 \cdot 5 + 2 \cdot 32 \cdot 3 \cdot 3 + (193 \cdot 193 \cdot 32)^2 + 193 \cdot 193 \cdot 32 \approx \cdot 10^{12}$ parameters, while the number of total pixels is $100 \cdot 193 \cdot 193 \approx 4 \cdot 10^{6}$.  Therefore it should be very easy for this model to overfit and achieve zero training error.  Despite this we found that the training error plateaus at a mean square error of approximately $1.5$.  One hypothesis we have is that the large number of zeros in the final sizes ($\approx 47.5 \%$) makes it difficult for the neural network to properly train.  Instead, we find that sometimes the network tends to predict a constant value for almost all our data.  We may need to transfer our problem to a class prediction problem, where we are predicting whether the final size is zero or not based on the early images.  
+Our preliminary results are poor.  Even for the small dataset of 100 images we can not achieve overfitting.  The mean square error at 50 epochs is equal to 0.2 (Figure \ref{results}\textbf{a}).  It may be that we can achieve zero error with sufficient training, but from this will almost certainly not generalize.     Most of the test set is predicted to be non-zero, but the true size is equal to zero (Figure \ref{results}\textbf{b}).  It may be that the labels are noisy, but recent work with training noisy labels indicates that this may not be a major problem~\cite{xue2019robust}.
+
+To further test our ability to overtrain, we tried increasing the number of parameters by doubling the number of channels in each convolutional layer and adding a fully connected layer.  This resulted in $64 \cdot 5 \cdot 5 + 2 \cdot 32 \cdot 3 \cdot 3 + (193 \cdot 193 \cdot 32)^2 + 193 \cdot 193 \cdot 32 \approx \cdot 10^{12}$ parameters, while the number of total pixels is $100 \cdot 193 \cdot 193 \approx 4 \cdot 10^{6}$.  Therefore it should be very easy for this model to overfit and achieve zero training error.  Despite this we found that the training error plateaus at a mean square error of approximately $1.5$.  One hypothesis we have is that the large number of zeros in the final sizes ($\approx 47.5 \%$) makes it difficult for the neural network to properly train.  Instead, we find that sometimes the network tends to predict a constant value for almost all our data.  We may need to transfer our problem to a class prediction problem, where we are predicting whether the final size is zero or not based on the early images.  
 
 \begin{figure*}[t!]
 \begin{center}
- \includegraphics[width=0.8\linewidth]{figures/error_vs_epoch_and_validation_predictions_vs_observed.pdf}
+ \includegraphics[width=0.8\linewidth]{figures/error_vs_epoch_and_validation_predictions_vs_observed_v2.pdf}
 \end{center}
-   \caption{\textbf{a} The training error (blue) and validation error (orange) as a function of training epoch.  \textbf{b} Predicted final size and observed final size, with the index ordered by observed final size. }
+   \caption{\textbf{a} The training error (blue) and validation error (orange) as a function of training epoch.  \textbf{b} Predicted final size versus observed final size.}
 \label{results}
 \end{figure*}
 
