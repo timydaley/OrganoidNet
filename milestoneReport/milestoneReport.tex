@@ -88,11 +88,8 @@ For input we took the day 1 images.  We determined that the day 0 images are not
 
 \section{Model}
 
-To show the feasibility of a deep convolutional approach, we constructed a preliminary deep learning model consisting of three convolutional layers, applying batch normalization and max pooling to each layer, followed by two fully connected layers.  As an initial test we use two hundred randomly selected images as a training set and one hundred randomly selected images as a training set.  
-
-
-
-
+To show the feasibility of a deep convolutional approach, we constructed two preliminary deep learning models. One consists of three convolutional layers, applying batch normalization and max pooling to each layer, followed by two fully connected layers. The other consist of four layers with three convolution layers and one fully connected layer. We tried different kernal size, batch size, optimizer and learning rate. The Adam Optimizer and learning rate 1e-4 produce best result for the preliminary models.
+As an initial test we use one hundred randomly selected images as a training set and another one hundred randomly selected images as a validation set.  
 
 
 \begin{figure*}[t!]
