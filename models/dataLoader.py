@@ -64,9 +64,7 @@ class OrganoidMwAreaDataset(data.Dataset):
     # convert to grey scale
     image = np.true_divide(color.rgb2gray(image) - self.mean, self.sd)
     larger_image = np.zeros((self.max_dim, self.max_dim))
-    for i in range(image.shape[0]):
-      for j in range(image.shape[1]):
-        larger_image[i,j] = image[i,j]
+    larger_image = np.pad(image, pad_width = ((0, self.max_dim - image.shape[0]), (0, self.max_dim - image.shape[1])), mode = 'constant', constant_values = 0.0)
     # resize and add color axis because torch image: CxHxW
     larger_image = np.reshape(larger_image, newshape = (1, self.max_dim, self.max_dim))
     # does it matter how the resizing is done?  I don't think so
