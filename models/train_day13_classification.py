@@ -57,7 +57,7 @@ training_generator = data.DataLoader(initial_train_set, **params)
 in_channels = 1
 out_size = 1
 model = SimpleConvNetClassification(in_channels = in_channels, layer1channels = 64, layer2channels = 32, layer3channels = 16).to(device)
-optimizer = optim.Adam(model.parameters(), lr=0.000001)
+optimizer = optim.Adam(model.parameters(), lr=0.001)
 loss = nn.BCELoss()
 avg_error_array = np.zeros(max_epochs)
 batch_error_array = np.zeros(max_epochs)
@@ -85,6 +85,6 @@ for epoch in range(max_epochs):
     avgLoss = avgLoss + train_error/211
   avg_error_array[epoch] = avgLoss
   batch_error_array[epoch] = batchLoss
-  np.savetxt(fname = "../LogisticResults/full_image_day13_avg_err_lr0.000001_kernel3_128channels.txt", X = avg_error_array[range(epoch + 1)])
-  np.savetxt(fname = "../LogisticResults/full_image_day13_batch_err_lr0.000001_kernel3_128channels.txt", X = batch_error_array[range(epoch + 1)])
+  np.savetxt(fname = "../LogisticResults/full_image_day13_avg_err_lr0.001_kernel3_64channels.txt", X = avg_error_array[range(epoch + 1)])
+  np.savetxt(fname = "../LogisticResults/full_image_day13_batch_err_lr0.001_kernel3_64channels.txt", X = batch_error_array[range(epoch + 1)])
 

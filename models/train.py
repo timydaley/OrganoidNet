@@ -55,11 +55,11 @@ training_generator = data.DataLoader(initial_train_set, **params)
 
 in_channels = 1
 out_size = 1
-model = SimpleConvNet(in_channels = in_channels, out_size = out_size).to(device)
-optimizer = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=10**-8, weight_decay=0)
+model = SimpleConvNet(in_channels = in_channels, out_size = out_size, layer1channels = 64, layer2channels = 32).to(device)
+optimizer = optim.Adam(model.parameters(), lr=0.00001)
 loss = nn.MSELoss()
 train_error_array = np.zeros(max_epochs)
-
+test_error_array = np.zeros(max_epochs)
 
 
 # Loop over epochs
@@ -67,6 +67,7 @@ for epoch in range(max_epochs):
   # Training
   print(epoch)
   batchMSE = 0.0
+  avgMSE = 0.0
   batch = 0
   print('begin training')
   for local_X, local_Y in training_generator:
@@ -80,6 +81,7 @@ for epoch in range(max_epochs):
     Y_hat = model.forward(local_X)
     train_error = loss(Y_hat, local_Y).item()
     batchMSE = train_error
-    train_error_array[epoch] = batchMSE
-    np.savetxt(fname = "train_error_array_max_pool_test.txt", X = train_error_array[range(epoch + 1)])
+    avgMSE = avgMSE + train_error*local_Y.shape[0]/n
+  train_error_array[epoch] = avgMSE
+  np.savetxt(fname = "train_error_array_max_pool_test_avgMSE.txt", X = train_error_array[range(epoch + 1)])
 

@@ -14,15 +14,15 @@ def update_sum_square_diff(x, ssd_prev, x_bar_prev, x_bar_curr):
 
 #assert len(sys.argv) == 3
 #path = sys.argv[1]
-path = '/Users/Daley/Teaching/CS231N/CS231Nproject/CS231n_Tim_Shan_example_data/'
+path = '../data/CS231n_Tim_Shan_example_data/'
 well_descriptions = pandas.read_csv('filtered_well_descriptions.txt', header=0)
-day1wells = well_descriptions['well_id']
-day1wells = day1wells[well_descriptions['day'] == 1]
-day1wells.shape
+day2wells = well_descriptions['well_id']
+day2wells = day2wells[well_descriptions['day'] == 2]
+day2wells.shape
 day13wells = well_descriptions['well_id']
 day13wells = day13wells[well_descriptions['day'] == 13]
 day13wells.shape
-daysLabel = pandas.Series(list(set(day13wells) & set(day1wells)))
+daysLabel = pandas.Series(list(set(day13wells) & set(day2wells)))
 
 
 well_labels = []
@@ -36,7 +36,7 @@ for i in range(daysLabel.shape[0]):
     i2str = '0' + i2str
   well_labels.append(i2str)
 
-day_label_X = ['01']*len(well_labels)
+day_label_X = ['02']*len(well_labels)
 
 x_bar_curr = 0.0
 x_bar_prev = 0.0
@@ -56,7 +56,7 @@ for index in range(len(well_labels)):
     x_bar_curr = update_mean(x, x_bar_prev, n)
     ssd_curr = update_sum_square_diff(x, ssd_curr, x_bar_prev, x_bar_curr)
 
-filname = "overall_mean_and_var.txt"
+filname = "day2_mean_and_var.txt"
 with open(filname, "w") as f:
   print("mean\tvariance", file = f)
   print(x_bar_curr, '\t', ssd_curr/n, file = f)
