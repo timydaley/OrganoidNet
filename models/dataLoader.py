@@ -79,4 +79,36 @@ class OrganoidMwAreaDataset(data.Dataset):
 
 
 
+class OrganoidMultipleDataset(data.Dataset):
+    'dataset class for microwell organoid images'
+    def __init__(self, path2files, image_names, Y, mean_sd_dict):
+        for k, image_name in image_names.items():
+            assert len(image_name) == len(Y)
+        self.path = path2files
+        self.image_names = image_names
+        self.Y = Y
+        self.mean_sd_dict = mean_sd_dict
+    def __len__(self):
+        return len(self.Y)
+    def getXimage(self, index):
+        all_images_list = []
+        for day,img_names in self.image_names.items():
+            #print(day, "   ", index)
+            
+            img_name = img_names[index]
+            img_loc = os.path.join(self.path, img_name)
+            image = io.imread(img_loc)
+            mean, sd = self.mean_sd_dict[day]
+            image = np.true_divide(color.rgb2gray(image) - mean, sd)
+            all_images_list.append(image)
+        images = np.array(all_images_list)
+        return torch.from_numpy(images).float()
+    def getY(self, index):
+        Y = self.Y[index]
+        return torch.from_numpy(np.asarray(self.Y[index], dtype=float)).float()
+    def __getitem__(self, index):
+        X = self.getXimage(index)
+        y = self.getY(index)
+        return X, y
+
 
