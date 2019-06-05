@@ -136,6 +136,11 @@ We have also tried learning rate 1e-2,1e-3,3e-4,1e-4, the best is 1e-4.
 
 For regression, we use pretrained ResNet18 with Adam Optimizer for 3000 training data, the loss go down to 0.01 with training mean square error as 0.03 and validation mean square error as 0.55 which is overfitting. The I added more dataset to 7k and get the validation mean square error down to 0.23 for 4 epoch. The truth and prediction size correlation is 0.85. 
 
+ \section{Experiments}
+ We run the classification model to predict whether the final day well has cell. The best accuracy is 0.8. The we run regression to predict the size for the wells which has cell. The minumum mean square error is 0.22. 
+
+For the future work, we could use GAN to generate final day well images so that we do not need to get the size label since it is not very accurate. Besides the final day image has more information about the cancel than just the cell size. 
+
 
 \
 
