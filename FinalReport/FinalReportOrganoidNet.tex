@@ -73,7 +73,17 @@ The objective of her research is to study the mechanisms of tumor growth by subj
 \label{final_size_dist}
 \end{figure}
 
+ \begin{figure*}[t!]
+\begin{center}
+\includegraphics[width=0.9\linewidth]{figures/classification/well_4166_condition_A1_all_days_images_small.pdf}
+\end{center}
+   \caption{All 14 images from a single microwell.}
+\label{well_4166_condition_A1_all_days_images_small}
+\end{figure*}
+
 Previous approaches for high-throughput analysis of organoid imaging data did not look at single-cell microwell level data.  Instead they typically relied upon a large number of cells to quantify cell proliferation or death \cite{jabs2017screening},  used cell counting assays to calculate growth \cite{sebrell2018live}, or used single cell tracking to calculate cell motility \cite{geum2016epidermal}.  To our knowledge, no deep learning approaches have been proposed to analyse organoid imaging data, despite the large success in deep learning to analysing imaging data across a broad spectrum of applications.  However, we have found successful convolutional neural network (CNN) approaches in related biological analysis such as high content screening \cite{simm2018repurposing}, but this is not similar enough for us to compare against.
+
+
 
 The purpose of this project is to provide a proof of principle for CNN-based high-throughput analysis of organoid imaging data.  
 
@@ -84,6 +94,14 @@ The purpose of this project is to provide a proof of principle for CNN-based hig
 
 
 
+
+
+
+
+The data is composed of 193$\times$193 greyscale images of 4800 microwells for each of 6 wells, imaged across 14 days (example shown in figure~\ref{well_4166_condition_A1_all_days_images_small}).  So we have $6 \cdot 4800$ = 28,800 wells with 14 images per well.  The images were obtained via computational stitching~\cite{preibisch2009globally} of multiple larger images of well.  A small number of images appear distorted.  We filtered the images by the estimated area of their interior, computed by the hyst2 function in openCV~\cite{opencv_library}, to try to reduce such artifacts.  If the estimated area was larger than possible for any of the 14 days, then we removed all images of that well from the data.  After filtering we kept 8,763 microwells.  Example images are shown in figure~\ref{workflow}.
+
+One difficulty with this project is that we did not obtain all the data at the start.  We began with one experiment (4800 microwells), and then obtained data from more experiments as they were processed.   We found that some models built on the first experiment did not generalize well, and a major objective is to ensure that our model can is generalizable across biological conditions.
+
  \begin{figure}[b!]
 \begin{center}
  \includegraphics[width=0.9\linewidth]{figures/day13_train_loss_vs_epoch_vs_day_v2.pdf}
@@ -91,10 +109,6 @@ The purpose of this project is to provide a proof of principle for CNN-based hig
    \caption{Cross-entropy loss for the training set using days 1, 2, and 13 to predict whether hyst2 area is zero at day 13.}
 \label{train_loss_day_1_2_13}
 \end{figure}
-
-The data is composed of 193$\times$193 greyscale images of 4800 microwells for each of 6 wells, imaged across 14 days.  So we have $6 \cdot 4800$ = 28,800 wells with 14 images per well.  The images were obtained via computational stitching~\cite{preibisch2009globally} of multiple larger images of well.  A small number of images appear distorted.  We filtered the images by the estimated area of their interior, computed by the hyst2 function in openCV~\cite{opencv_library}, to try to reduce such artifacts.  If the estimated area was larger than possible for any of the 14 days, then we removed all images of that well from the data.  After filtering we kept 8,763 microwells.  Example images are shown in figure~\ref{workflow}.
-
-One difficulty with this project is that we did not obtain all the data at the start.  We began with one experiment (4800 microwells), and then obtained data from more experiments as they were processed.   We found that some models built on the first experiment did not generalize well, and a major objective is to ensure that our model can is generalizable across biological conditions.
 
 %We tried single day image, but day 1 iamge does not work weel. We also tried stacking 2 days or 3 days images for input, the results looks better.
 
@@ -105,6 +119,7 @@ One difficulty with this project is that we did not obtain all the data at the s
  \section{Methods}
  
  \subsection{Proof of principle model}
+ \label{proof_of_principle}
  
  To start we approached the regression problem straightforward.  We found difficulties with overfitting using only day 1 on the images from a single well.  We therefore decided to first focus on the classification problem, to predict from the early days whether the final day is empty or not, using whether the computed hyst2 area is zero or not as zero and one, respectively.   As a proof of principle, we attempted to overtrain a deep convolutional neural network consisting of three convolutional layers, with kernel sizes of 2, 3, and 3, respectively, and channels of 64, 32, 16, respectively.  Each convolutional layers was followed by a batch normalization layer, a ReLU layer, and then a max pooling layer with a kernel size of 2.  The convolutional layer were followed by a square fully connected layer, followed by a ReLU layer, a fully connected layer with output size of one, and finally a sigmoid for output.  We applied this network to all images from a single well, and attempted overfitting on day 1, day 2, and day 13, using cross-entropy loss.  Day 13 was included as a sanity check, since the hyst2 area was computed using the day 13 images.  The training loss for days 2 and 13 quickly went to zero, while the loss for day 1 did not go below the loss for random guessing (Figure~\ref{train_loss_day_1_2_13}).  We therefore excluded days 1 and 0 from further consideration because they do not appear to be informative towards our objective.  It may be that day is informative when combined with other days, but not by itself.
  
@@ -162,21 +177,7 @@ We explored adding data augmentation for this model, but this did not appreciabl
 \label{classification_train_loss_train_and_val_loss}
 \end{figure*}
 
-
-
-For regression, we use pretrained ResNet18 with Adam Optimizer for 3000 training data, the loss go down to 0.01 with training mean square error as 0.03 and validation mean square error as 0.55 which is overfitting. The I added more dataset to 7k and get the validation mean square error down to 0.23 for 4 epoch. The truth and prediction size correlation is 0.85. 
-
-
-
- \section{Experiments}
- We run the classification model to predict whether the final day well has cell. The best accuracy is 0.8. The we run regression to predict the size for the wells which has cell. The minumum mean square error is 0.22. 
-
-For the future work, we could use GAN to generate final day well images so that we do not need to get the size label since it is not very accurate. Besides the final day image has more information about the cancel than just the cell size. 
-
-
-
-
-
+To validate our approach we generated saliency maps for several example images, shown in figure~\ref{saliency_maps}.  We should note that we did not perform data augmentation on any of the images, so that the shifting and rotation shown in the first and last example images are present in the real data.     The saliency maps show a clear indication that the convolutional filters are picking up the signal contained in the microwell.  The boundaries of the microwell contain only noise, and even when the images are rotated or shifted, the interior of the microwell is highlighted in the saliency map.  This is evidence that our convolutional model is correctly identifying the salient information contained in the images.
 
  \begin{figure}[t!]
 \begin{center}
@@ -185,6 +186,37 @@ For the future work, we could use GAN to generate final day well images so that 
    \caption{Example images and their corresponding saliency maps.}
 \label{saliency_maps}
 \end{figure}
+
+
+\subsection{Regression}
+
+Now that we were satisfied with the results of the classification problem, we turned back to the regression problem.  We took the pretrained ResNet18 for feature generation and used the Adam Optimizer to train the final layer, with mean square error as the loss function.  We looked at only the images that have a final hyst2 area greater than zero.  As discussed in section~\ref{proof_of_principle}, the overabundance of zeros prevented us from directly solving this problem.  We obtained approximately seven thousand microwells for a training set.  We were able to obtain a validation (913 microwells) mean square error of 0.23 after 4 epochs with early stopping (figure~\ref{regression_correlation}).
+
+
+ \begin{figure}[t!]
+\begin{center}
+ \includegraphics[width=0.9\linewidth]{figures/regression/size_prediction_and_observation_scatter_plot.pdf}
+\end{center}
+   \caption{The observed hyst2 area size (x-axis) and the predicted hyst2 area size (y-axis) on the validation set.  The correlation is equal to 0.85.}
+\label{regression_correlation}
+\end{figure}
+
+
+
+
+
+\section{Discussion}
+
+This work represents a proof of principle for a CNN approach to microwell image analysis.  This analysis is complicated by the fact that cells are small in the initial days of the experiment, and this is exactly when the results are most critical for guidance on medical treatment.  We suggest several approaches to improve our results:
+\begin{itemize}
+\item more data across more biological conditions will help to improve the generalization of the model;
+\item the label we used is inherently noisy, therefore using a GAN to predict the final day image may be a better approach (though this would have been a futile effort with the amount of data that we had);
+\item combining the classification and regression problem, possibly by using something similar to a zero-inflated model likelihood as the loss function.
+\end{itemize}
+
+
+
+
 
 
 
