@@ -151,6 +151,8 @@ Because of the paucity of experiments, we explored data augmentation approaches.
 % After finding out which wells has cells by classification model, we predict their final cell sizes by CNN regression model. We used the pretrain ResNet18 model,Adam optimizer and mean square error as loss. 
  \section{Experiments}
  
+ \subsection{Classification}
+ 
 For classification, first we used one simple 3-conv,1-fully connected layer without any regularization to train 100 images.  We obtained overfitting, as the training loss went to 0 and the training accuracy  went to 1. However, the validation accuracy remained constant, equal to random guessing.  We then added more convolutional layers and more parameters in each of the convolution network, obtaining the model described in section~\ref{multidayCNN},  and training with more data, 4510 microwells.  We obtained 0.19 as the best validation loss , 0.8 as the best training accuracy and 0.6 as the best validation accuracy across all epochs (figure~\ref{classification_train_loss_train_and_val_loss}).  If we run for more epochs, then the training loss goes to zero and the training accuracy goes to one.  However, the validation accuracy does not improve.  This supports the decision of early stopping.  To improve generalization we then added dropout.  This improved the validation accuracy slightly, to 0.65.
 However, the best improvement is when we added more microwells to the training.  Then the validation accuracy improved to 0.8.  The test accuracy for this model is 0.77 (figure~\ref{test_set_confusion_matrix}).
 We explored adding data augmentation for this model, but this did not appreciably improve the validation accuracy.
@@ -179,7 +181,7 @@ We explored adding data augmentation for this model, but this did not appreciabl
 
 To validate our approach we generated saliency maps for several example images, shown in figure~\ref{saliency_maps}.  We should note that we did not perform data augmentation on any of the images, so that the shifting and rotation shown in the first and last example images are present in the real data.     The saliency maps show a clear indication that the convolutional filters are picking up the signal contained in the microwell.  The boundaries of the microwell contain only noise, and even when the images are rotated or shifted, the interior of the microwell is highlighted in the saliency map.  This is evidence that our convolutional model is correctly identifying the salient information contained in the images.
 
- \begin{figure}[t!]
+ \begin{figure}[b!]
 \begin{center}
  \includegraphics[width=0.9\linewidth]{figures/saliency_maps.pdf}
 \end{center}
@@ -193,7 +195,7 @@ To validate our approach we generated saliency maps for several example images, 
 Now that we were satisfied with the results of the classification problem, we turned back to the regression problem.  We took the pretrained ResNet18 for feature generation and used the Adam Optimizer to train the final layer, with mean square error as the loss function.  We looked at only the images that have a final hyst2 area greater than zero.  As discussed in section~\ref{proof_of_principle}, the overabundance of zeros prevented us from directly solving this problem.  We obtained approximately seven thousand microwells for a training set.  We were able to obtain a validation (913 microwells) mean square error of 0.23 after 4 epochs with early stopping (figure~\ref{regression_correlation}).
 
 
- \begin{figure}[t!]
+ \begin{figure}[b!]
 \begin{center}
  \includegraphics[width=0.9\linewidth]{figures/regression/size_prediction_and_observation_scatter_plot.pdf}
 \end{center}
@@ -205,12 +207,18 @@ Now that we were satisfied with the results of the classification problem, we tu
 
 
 
-\section{Discussion}
+\section{Conclusions}
 
-This work represents a proof of principle for a CNN approach to microwell image analysis.  This analysis is complicated by the fact that cells are small in the initial days of the experiment, and this is exactly when the results are most critical for guidance on medical treatment.  We suggest several approaches to improve our results:
+
+
+This work represents a proof of principle for a CNN approach to microwell image analysis.  We found that the regression problem was difficult to solve in a straight-forward manner due to overabundance of zeros.  We found that using the combination of images from several days improves the predictions.  We found that the pre-trained ResNet18 performed the best, though the performance from our best bespoke model was close behind.  The performance of our models may be inhibited by the fact that we are using a proxy measure for the true size of the cells in the microwell.  Better labeled data will help to improve the performance, as we may be accurately predicting the underlying truth, and just not know it.  
+
+
+This analysis is complicated by the fact that cells are small in the initial days of the experiment, and this is exactly when the results are most critical for guidance on medical treatment.  We suggest several approaches to improve our results:
 \begin{itemize}
 \item more data across more biological conditions will help to improve the generalization of the model;
-\item the label we used is inherently noisy, therefore using a GAN to predict the final day image may be a better approach (though this would have been a futile effort with the amount of data that we had);
+\item better labeling of the true size will help to improve the performance, as there is some inherent variability to the estimated label;
+\item because the label we used is inherently noisy, using a GAN to predict the final day image may be a better approach (though this would have been a futile effort with the amount of data that we had);
 \item combining the classification and regression problem, possibly by using something similar to a zero-inflated model likelihood as the loss function.
 \end{itemize}
 
