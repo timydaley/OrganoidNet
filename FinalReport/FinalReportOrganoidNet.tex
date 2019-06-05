@@ -117,24 +117,56 @@ One difficulty with this project is that we did not obtain all the data at the s
 \end{figure*}
 
 \subsection{Deep CNN for multi-day input}
+\label{multidayCNN}
 
 After the initial proof of principle we built a classification CNN to predict whether the microwell was empty at the end of the time point (indicating cell death), using hyst2 area as a proxy for whether a cell is empty or not.  If the hyst2 area at day 13 is zero then we say that microwell is empty and if the hyst2 area is greater than zero then we say the microwell is non-empty.  This CNN had five convolutional layers, all with batch normalization, ReLU, and max pooling following, with channels sizes of 32, 64, 128, 256, and 256 and kernel sizes of 5, 3, 3, 3, 3 (Figure~\ref{workflow}).  We used cross-entropy as the loss function and the Adam optimizer with learning rate $10^-4$.   To facilitate generalization of our model we used Dropout regularization with $p = 0.5$.  To take into account the temporal nature of our data we used multiple day images as input.  We treated each separate image as an input channel (since each image is a single grey-scale channel).  We initially used days 2 and day 8 images as input, and later used days 2, 5, and 8 as input.
 
 
 \subsection{Pretrained model}
 
-We also applied pre-trained models, using transfer learning to train only the final output layer, keeping the other layers constant.  We found success with the ResNet 18 model, and we will discuss those results in the next section.
+We also applied pre-trained models, using transfer learning to train only the final output layer, keeping the other layers constant.  We found success with the ResNet 18 model, but not as good as our previously discussed model.
 
+\subsection{Data augmentation}
+
+Because of the paucity of experiments, we explored data augmentation approaches.  Because the primary information is in the center of the image, we hypothesized that random cropping may be a suitable data augmentation strategy.  Additionally, the information content of the images should be rotation invariant.   Therefore we also explored rotations for data augmentation.
 
 
  %After initial models, we generate two models. The first model is a classification CNN model to find out whether the final day wells has cell or not. We built a five convolutional layer with max pooling and one fully connected layer model with dropout. We compute cross-entropy for loss and use Adam for the optimizer. The model is overfitting for 4000 training images. But when the training set increase to 6000, the validation accuracy incresed to around 0.8. However adding more images to 10000 does not makes the model overffiting again. We then tried adding more regulization like more max pooling and dropout. We also added data augmentation to random crop and rotate the images. We add learning rate decay in the optimizer every 5 steps by 0.1. We also use pretrained ResNet18 mode, the validation accuracy did not increase.
 
 % After finding out which wells has cells by classification model, we predict their final cell sizes by CNN regression model. We used the pretrain ResNet18 model,Adam optimizer and mean square error as loss. 
  \section{Experiments}
-For classification, first we used one simple 3-conv,1-fully connected layer without any regularization to train 100 images, we go overffiting with training loss go down to 0 and traning accuracy go up to 1 but validation accuracy as 0.5. Then we tried different models by adding more convolutional layers and more parameters in each of the convolution network and training with 4510 images, with 0.19 as best loss, 0.8 as training accuracy and 0.6 as validation accuracy.  Then I run for more epoches, the loss almost go to 0 and training accuracy go up to 1 but validation accuracy improves a little bit to 0.65. It was overffiting. So I added dropout and more maxpooling, the validation accuracy went up to 0.68. But it was still overfitting, so I added the training set to 6514. The minum loss is 0.11 and best validation is 0.8 and training accuracy is 0.915. But by changed different models, adding fully connected layer or using pretrained, but validation accuracy did not improve. By adding data augmentation, the training accuracy go down, but validation accuracy did not go up. 
-We have also tried learning rate 1e-2,1e-3,3e-4,1e-4, the best is 1e-4.
+ 
+For classification, first we used one simple 3-conv,1-fully connected layer without any regularization to train 100 images.  We obtained overfitting, as the training loss went to 0 and the training accuracy  went to 1. However, the validation accuracy remained constant, equal to random guessing.  We then added more convolutional layers and more parameters in each of the convolution network, obtaining the model described in section~\ref{multidayCNN},  and training with more data, 4510 microwells.  We obtained 0.19 as the best validation loss , 0.8 as the best training accuracy and 0.6 as the best validation accuracy across all epochs (figure~\ref{classification_train_loss_train_and_val_loss}).  If we run for more epochs, then the training loss goes to zero and the training accuracy goes to one.  However, the validation accuracy does not improve.  This supports the decision of early stopping.  To improve generalization we then added dropout.  This improved the validation accuracy slightly, to 0.65.
+However, the best improvement is when we added more microwells to the training.  Then the validation accuracy improved to 0.8.  The test accuracy for this model is 0.77 (figure~\ref{test_set_confusion_matrix}).
+We explored adding data augmentation for this model, but this did not appreciably improve the validation accuracy.
+  
+
+ \begin{figure}[b!]
+\begin{center}
+ \includegraphics[width=0.9\linewidth]{figures/classification/test_set_confusion_matrix.pdf}
+\end{center}
+   \caption{Confusion matrix for the classification problem on the 815 microwell test set.}
+\label{test_set_confusion_matrix}
+\end{figure}
+
+
+
+%Then I run for more epoches, the loss almost go to 0 and training accuracy go up to 1 but validation accuracy improves a little bit to 0.65. It was overffiting. So I added dropout and more maxpooling, the validation accuracy went up to 0.68. But it was still overfitting, so I added the training set to 6514. The minum loss is 0.11 and best validation is 0.8 and training accuracy is 0.915. But by changed different models, adding fully connected layer or using pretrained, but validation accuracy did not improve. By adding data augmentation, the training accuracy go down, but validation accuracy did not go up. 
+%We have also tried learning rate 1e-2,1e-3,3e-4,1e-4, the best is 1e-4.
+
+ \begin{figure*}[t!]
+\begin{center}
+\includegraphics[width=0.8\linewidth]{figures/classification/classification_train_loss_train_and_val_loss.pdf}
+\end{center}
+   \caption{The training cross-entropy loss (top) and training and validation accuracy (bottom) for the classification problem.}
+\label{classification_train_loss_train_and_val_loss}
+\end{figure*}
+
+
 
 For regression, we use pretrained ResNet18 with Adam Optimizer for 3000 training data, the loss go down to 0.01 with training mean square error as 0.03 and validation mean square error as 0.55 which is overfitting. The I added more dataset to 7k and get the validation mean square error down to 0.23 for 4 epoch. The truth and prediction size correlation is 0.85. 
+
+
 
  \section{Experiments}
  We run the classification model to predict whether the final day well has cell. The best accuracy is 0.8. The we run regression to predict the size for the wells which has cell. The minumum mean square error is 0.22. 
@@ -142,7 +174,19 @@ For regression, we use pretrained ResNet18 with Adam Optimizer for 3000 training
 For the future work, we could use GAN to generate final day well images so that we do not need to get the size label since it is not very accurate. Besides the final day image has more information about the cancel than just the cell size. 
 
 
-\
+
+
+
+
+ \begin{figure}[t!]
+\begin{center}
+ \includegraphics[width=0.9\linewidth]{figures/saliency_maps.pdf}
+\end{center}
+   \caption{Example images and their corresponding saliency maps.}
+\label{saliency_maps}
+\end{figure}
+
+
 
 {\small
 \bibliographystyle{ieee}
