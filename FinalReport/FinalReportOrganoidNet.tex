@@ -41,7 +41,13 @@ Timothy Daley \\
 Stanford University \\
 Departments of Statistics and Bioengineering \\
 {\tt\small tdaley@stanford.edu}
+\and
+Alexandra Sockell \\
+Stanford University \\
+Department of Genetics \\
+{\tt\small asockell@stanford.edu}
 }
+
 
 \maketitle
 %\thispagestyle{empty}
@@ -59,11 +65,6 @@ Predicting tumor growth rate is a first step in determining treatment options fo
 Alexandra Sockell of the Fordyce and Curtis labs in the Bioengineering and Genetics departments, respectively, of Stanford University has developed a microfluidic device to isolate single cells of a tumor and allow them to grow into organoids  within the microwell.  Organoids are three dimensional stem cell-like cultures that organize into a "mini-organ"~\cite{rios2018imaging}, and can be used to study cancer in a more natural environment than traditional cell lines~\cite{drost2018organoids}.
 The objective of her research is to study the mechanisms of tumor growth by subjecting a large number of  individual cells to a wide range of treatments and conditions and track their condition by imaging.  She has taken 14 days of imaging over 8 conditions.    For each day, there are approximate 38,000 well images across all conditions.  The number of cells per well is approximately Poisson, with most of the wells not containing any cells, 25\% have one cell, and smaller portion have more than 1.  We believe that the large number of images should provide a sufficient amount of data and information content to apply deep convolution neural network approach.  Our hypothesis is that the state of the cells in the early days should be related to their final state.  Therefore our objective to determine whether the early stages of the organoid can predict the growth rate and final state of the organoid.    
 
-
-Previous approaches for high-throughput analysis of organoid imaging data did not look at single-cell microwell level data.  Instead they typically relied upon a large number of cells to quantify cell proliferation or death \cite{jabs2017screening},  used cell counting assays to calculate growth \cite{sebrell2018live}, or used single cell tracking to calculate cell motility \cite{geum2016epidermal}.  To our knowledge, no deep learning approaches have been proposed to analyse organoid imaging data, despite the large success in deep learning to analysing imaging data across a broad spectrum of applications.  We have found successful CNN approaches in related biological analysis such as high content screening \cite{simm2018repurposing}.  
-
-The purpose of this project is to provide a proof of principle for CNN-based high-throughput analysis of organoid imaging data.  
-
 \begin{figure}[b!]
 \begin{center}
  \includegraphics[width=0.8\linewidth]{figures/final_day_hyst2_area_density.pdf}
@@ -72,32 +73,65 @@ The purpose of this project is to provide a proof of principle for CNN-based hig
 \label{final_size_dist}
 \end{figure}
 
+Previous approaches for high-throughput analysis of organoid imaging data did not look at single-cell microwell level data.  Instead they typically relied upon a large number of cells to quantify cell proliferation or death \cite{jabs2017screening},  used cell counting assays to calculate growth \cite{sebrell2018live}, or used single cell tracking to calculate cell motility \cite{geum2016epidermal}.  To our knowledge, no deep learning approaches have been proposed to analyse organoid imaging data, despite the large success in deep learning to analysing imaging data across a broad spectrum of applications.  However, we have found successful convolutional neural network (CNN) approaches in related biological analysis such as high content screening \cite{simm2018repurposing}, but this is not similar enough for us to compare against.
+
+The purpose of this project is to provide a proof of principle for CNN-based high-throughput analysis of organoid imaging data.  
+
+
+
 \section{Data}
 
-%\begin{figure*}[t!]
-%\begin{center}
- %\includegraphics[width=0.8\linewidth]{figures/networkExampleImage.pdf}
-%\end{center}
-%   \caption{Example workflow of our algorithm.  The input is a 193$\times$193 greyscale image of the cell at day one.  We pass this through a convolutional neural network to predict the final size, normalized to have variance equal to 1.}
-%\label{workflow}
-%\end{figure*}
 
-The data is composed of 193$\times$193 greyscale images of 4800 microwells for each of 6 wells, imaged across 14 days.  So we have $6 \cdot 4800$ = 28,800 wells with 14 images per well.  The images were obtained via computational stitching~\cite{preibisch2009globally} of multiple larger images of well.  A small number of images appear distorted.  We filtered the images by the estimated area of their interior, computed by the hyst2 function in openCV~\cite{opencv_library}, to try to reduce such artifacts.  If the estimated area was larger than possible for any of the 14 days, then we removed all images of that well from the data.  After filtering we kept 8,763 microwells.  Example images are shown in figure {\color{red} (reference needed)}.
 
-We tried single day image, but day 1 iamge does not work weel. We also tried stacking 2 days or 3 days images for input, the results looks better.
 
-We normalize the input images and size labels by using the training data mean and standard deviation.
+ \begin{figure}[b!]
+\begin{center}
+ \includegraphics[width=0.9\linewidth]{figures/day13_train_loss_vs_epoch_vs_day_v2.pdf}
+\end{center}
+   \caption{Cross-entropy loss for the training set using days 1, 2, and 13 to predict whether hyst2 area is zero at day 13.}
+\label{train_loss_day_1_2_13}
+\end{figure}
 
-We added data augmentation by random cropping with different size and horizonal flipping.
+The data is composed of 193$\times$193 greyscale images of 4800 microwells for each of 6 wells, imaged across 14 days.  So we have $6 \cdot 4800$ = 28,800 wells with 14 images per well.  The images were obtained via computational stitching~\cite{preibisch2009globally} of multiple larger images of well.  A small number of images appear distorted.  We filtered the images by the estimated area of their interior, computed by the hyst2 function in openCV~\cite{opencv_library}, to try to reduce such artifacts.  If the estimated area was larger than possible for any of the 14 days, then we removed all images of that well from the data.  After filtering we kept 8,763 microwells.  Example images are shown in figure~\ref{workflow}.
+
+One difficulty with this project is that we did not obtain all the data at the start.  We began with one experiment (4800 microwells), and then obtained data from more experiments as they were processed.   We found that some models built on the first experiment did not generalize well, and a major objective is to ensure that our model can is generalizable across biological conditions.
+
+%We tried single day image, but day 1 iamge does not work weel. We also tried stacking 2 days or 3 days images for input, the results looks better.
+
+%We normalize the input images and size labels by using the training data mean and standard deviation.
+
+%We added data augmentation by random cropping with different size and horizonal flipping.
 
  \section{Methods}
  
- To start we approached the regression problem straightforward.  We found difficulties with overfitting using only day 1 on the images from a single well.  We therefore decided to first focus on the classification problem, to predict from the early days whether the final day is empty or not, using whether the computed hyst2 area is zero or not as zero and one, respectively.   As a proof of principle, we attempted to overtrain a deep convolutional neural network consisting of three convolutional layers, with kernel sizes of 2, 3, and 3, respectively, and channels of 64, 32, 16, respectively.  Each convolutional layers was followed by a batch normalization layer, a ReLU layer, and then a max pooling layer with a kernel size of 2.  The convolutional layer were followed by a square fully connected layer, followed by a ReLU layer, a fully connected layer with output size of one, and finally a sigmoid for output.  We applied this network to all images from a single well, and attempted overfitting on day 1.
+ \subsection{Proof of principle model}
+ 
+ To start we approached the regression problem straightforward.  We found difficulties with overfitting using only day 1 on the images from a single well.  We therefore decided to first focus on the classification problem, to predict from the early days whether the final day is empty or not, using whether the computed hyst2 area is zero or not as zero and one, respectively.   As a proof of principle, we attempted to overtrain a deep convolutional neural network consisting of three convolutional layers, with kernel sizes of 2, 3, and 3, respectively, and channels of 64, 32, 16, respectively.  Each convolutional layers was followed by a batch normalization layer, a ReLU layer, and then a max pooling layer with a kernel size of 2.  The convolutional layer were followed by a square fully connected layer, followed by a ReLU layer, a fully connected layer with output size of one, and finally a sigmoid for output.  We applied this network to all images from a single well, and attempted overfitting on day 1, day 2, and day 13, using cross-entropy loss.  Day 13 was included as a sanity check, since the hyst2 area was computed using the day 13 images.  The training loss for days 2 and 13 quickly went to zero, while the loss for day 1 did not go below the loss for random guessing (Figure~\ref{train_loss_day_1_2_13}).  We therefore excluded days 1 and 0 from further consideration because they do not appear to be informative towards our objective.  It may be that day is informative when combined with other days, but not by itself.
+ 
+ \begin{figure*}[t!]
+\begin{center}
+\includegraphics[width=0.8\linewidth]{figures/networkExampleImage_v2.pdf}
+\end{center}
+   \caption{Example workflow of our CNN algorithm.  The input is a 193$\times$193 greyscale image of the cell at day one.  We pass this through a convolutional neural network to whether the final well is empty, using the hyst2 area as a proxy.}
+\label{workflow}
+\end{figure*}
 
- After initial models, we generate two models. The first model is a classification CNN model to find out whether the final day wells has cell or not. We built a five convolutional layer with max pooling and one fully connected layer model with dropout. We compute cross-entropy for loss and use Adam for the optimizer. The model is overfitting for 4000 training images. But when the training set increase to 6000, the validation accuracy incresed to around 0.8. However adding more images to 10000 does not makes the model overffiting again. We then tried adding more regulization like more max pooling and dropout. We also added data augmentation to random crop and rotate the images. We add learning rate decay in the optimizer every 5 steps by 0.1. We also use pretrained ResNet18 mode, the validation accuracy did not increase.
+\subsection{Deep CNN for multi-day input}
 
- After finding out which wells has cells by classification model, we predict their final cell sizes by CNN regression model. We used the pretrain ResNet18 model,Adam optimizer and mean square error as loss. 
+After the initial proof of principle we built a classification CNN to predict whether the microwell was empty at the end of the time point (indicating cell death), using hyst2 area as a proxy for whether a cell is empty or not.  If the hyst2 area at day 13 is zero then we say that microwell is empty and if the hyst2 area is greater than zero then we say the microwell is non-empty.  This CNN had five convolutional layers, all with batch normalization, ReLU, and max pooling following, with channels sizes of 32, 64, 128, 256, and 256 and kernel sizes of 5, 3, 3, 3, 3 (Figure~\ref{workflow}).  We used cross-entropy as the loss function and the Adam optimizer with learning rate $10^-4$.   To facilitate generalization of our model we used Dropout regularization with $p = 0.5$.  To take into account the temporal nature of our data we used multiple day images as input.  We treated each separate image as an input channel (since each image is a single grey-scale channel).  We initially used days 2 and day 8 images as input, and later used days 2, 5, and 8 as input.
 
+
+\subsection{Pretrained model}
+
+We also applied pre-trained models, using transfer learning to train only the final output layer, keeping the other layers constant.  We found success with the ResNet 18 model, and we will discuss those results in the next section.
+
+
+
+ %After initial models, we generate two models. The first model is a classification CNN model to find out whether the final day wells has cell or not. We built a five convolutional layer with max pooling and one fully connected layer model with dropout. We compute cross-entropy for loss and use Adam for the optimizer. The model is overfitting for 4000 training images. But when the training set increase to 6000, the validation accuracy incresed to around 0.8. However adding more images to 10000 does not makes the model overffiting again. We then tried adding more regulization like more max pooling and dropout. We also added data augmentation to random crop and rotate the images. We add learning rate decay in the optimizer every 5 steps by 0.1. We also use pretrained ResNet18 mode, the validation accuracy did not increase.
+
+% After finding out which wells has cells by classification model, we predict their final cell sizes by CNN regression model. We used the pretrain ResNet18 model,Adam optimizer and mean square error as loss. 
+
+\
 
 {\small
 \bibliographystyle{ieee}
