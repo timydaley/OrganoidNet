@@ -54,7 +54,7 @@ Department of Genetics \\
 
 %%%%%%%%% ABSTRACT
 \begin{abstract}
-   High-throughput analysis of imaging data is critical for analysing large data typical of modern biological investigations.  Here we investigate a convolutional neural network-based approach to analyse the growth of organoids based off of imaging data.  
+   High-throughput analysis of imaging data is critical for investigation involving large data typical of modern biological investigations.  Here we investigate a convolutional neural network-based approach for the automated analysis for the the growth of organoids based off of single cell level imaging data.  
 \end{abstract}
 
 %%%%%%%%% BODY TEXT
@@ -62,7 +62,7 @@ Department of Genetics \\
 
 Predicting tumor growth rate is a first step in determining treatment options for cancer patients.  Fast growing tumors necessarily require more aggressive treatment.  It would be beneficial if patients could avoid aggressive treatments when possible.  
 
-Alexandra Sockell of the Fordyce and Curtis labs in the Bioengineering and Genetics departments, respectively, of Stanford University has developed a microfluidic device to isolate single cells of a tumor and allow them to grow into organoids  within the microwell.  Organoids are three dimensional stem cell-like cultures that organize into a "mini-organ"~\cite{rios2018imaging}, and can be used to study cancer in a more natural environment than traditional cell lines~\cite{drost2018organoids}.
+The last author, Alexandra Sockell, has developed a microfluidic device to isolate single cells of a tumor and allow them to grow into organoids  within the microwell.  Organoids are three dimensional stem cell-like cultures that organize into a "mini-organ"~\cite{rios2018imaging}, and can be used to study cancer in a more natural environment than traditional cell lines~\cite{drost2018organoids}.
 The objective of her research is to study the mechanisms of tumor growth by subjecting a large number of  individual cells to a wide range of treatments and conditions and track their condition by imaging.  She has taken 14 days of imaging over 8 conditions.    For each day, there are approximate 38,000 well images across all conditions.  The number of cells per well is approximately Poisson, with most of the wells not containing any cells, 25\% have one cell, and smaller portion have more than 1.  We believe that the large number of images should provide a sufficient amount of data and information content to apply deep convolution neural network approach.  Our hypothesis is that the state of the cells in the early days should be related to their final state.  Therefore our objective to determine whether the early stages of the organoid can predict the growth rate and final state of the organoid.    
 
 \begin{figure}[b!]
@@ -98,11 +98,11 @@ The purpose of this project is to provide a proof of principle for CNN-based hig
 
 
 
-The data is composed of 193$\times$193 greyscale images of 4800, 3600, 3600, 2400, 3200, 3600 microwells for 6 wells with different experimental conditions, imaged across 14 days (example shown in figure~\ref{well_4166_condition_A1_all_days_images_small}).  So we have 296,800 wells with 14 images per well.  The images were obtained via computational stitching~\cite{preibisch2009globally} of multiple larger images of well.  A small number of images appear distorted.  We filtered the images by the estimated area of their interior, computed by the hyst2 function in openCV~\cite{opencv_library}, to try to reduce such artifacts.  If the estimated area was larger than possible for any of the 14 days, then we removed all images of that well from the data.  After filtering we kept 14,534 microwells.  Example images are shown in figure~\ref{workflow}.
+The data is composed of 193$\times$193 greyscale images of 4800, 3600, 3600, 2400, 3200, 3600 microwells for across 6 experiments with different experimental conditions, imaged across 14 days (example shown in figure~\ref{well_4166_condition_A1_all_days_images_small}).  We have a total of 296,800 images with 14 images per well.  The images were obtained via computational stitching~\cite{preibisch2009globally} of multiple larger images of well.  A small number of images appear distorted.  We filtered the images by the estimated area of their interior, computed by the hyst2 function in openCV~\cite{opencv_library}, to try to reduce such artifacts.  If the estimated area was larger than possible for any of the 14 days, then we removed all images of that well from the data.  After filtering we kept 14,534 microwells for the final model.  Early models were trained with a smaller subset of the data.  Example images for a single microwell are shown in figure~\ref{workflow}.
 
-We split the filtered dataset into train validation test set by 8:1:1 with 11,627 training set , 1453 validation set and 1454 test set. For normalization, we get the mean and standard deviation for each day well images across all training set. Then we apply these mean and standard deviation to normalize all training set, validation set and test set. Besides, we also normalize the lable, the final day well cell size for the regression model.
+We split the filtered dataset into train, validation, and test sets in a 8:1:1 ratio with 11,627 microwells in the training set , 1,453 microwells in the validation set, and 1,454 microwells in the test set. We calculated the mean and standard deviation for each day across the training set. Then we used these means and standard deviations to normalize the training set, validation set, and test set. When we investigated the problem of predicting the final  size of the organoid, we normalized the final day well cell size using the mean and standard deviation from the training set.
 
-For features, we tried with different single day image and also tried stacking two days or three days well images. For classification label, we determine whether final day has cell by computing whether the hyst2 area is greater than zero. For prediction label, we just use the hyst2 area of final day well. 
+For features, we tried using several different single day images.  Because the data has a temporal component, we also tried stacking two days or three days well images. For classification label, we determine whether the microwell is empty or not in the final day by computing whether the hyst2 area is zero or greater than zero. respectively. For prediction label, we just use the hyst2 area of final day well for those wells that are non-empty. 
 
 One difficulty with this project is that we did not obtain all the data at the start.  We began with one experiment (4800 microwells), and then obtained data from more experiments as they were processed.   We found that some models built on the first experiment did not generalize well, and a major objective is to ensure that our model is generalizable across biological conditions.
 
@@ -157,26 +157,13 @@ Because of the paucity of experiments, we explored data augmentation approaches.
  
  \subsection{Classification}
  
-For classification, first we used one simple 3-conv,1-fully connected layer without any regularization to train 100 images.  We obtained overfitting, as the training loss went to 0 and the training accuracy  went to 1. However, the validation accuracy remained constant, equal to random guessing.  We then added more convolutional layers and more parameters in each of the convolution network, obtaining the model described in section~\ref{multidayCNN},  and training with more data, 4510 microwells.  We obtained 0.19 as the best validation loss , 0.8 as the best training accuracy and 0.6 as the best validation accuracy across all epochs (figure~\ref{classification_train_loss_train_and_val_loss}).  If we run for more epochs, then the training loss goes to zero and the training accuracy goes to one.  However, the validation accuracy does not improve.  This supports the decision of early stopping.  To improve generalization we then added dropout.  This improved the validation accuracy slightly, to 0.65.
-However, the best improvement is when we added more microwells to the training.  Then the validation accuracy improved to 0.8.  The test accuracy for this model is 0.77 (figure~\ref{test_set_confusion_matrix}). But it is still a little bit overfitting.
-We explored adding data augmentation for this model, but this did not appreciably improve the validation accuracy but lower the training accuracy. We think the reason is that the well images data already has enough noise since some well images are already flipped and some well images lose part of information. We also explored adding more pooling and regularization, but the validation accuracy does not improve.
-To avoid overfitting, we can add more different datasets in the future.
-
-To obtain better accuracy, we have tried different optimzer like SGD and Adam. Adam works better. We also tried different learning rate and adding learning rate decay per 5 epoch. But learning rate 1e-4 without any decay returns higher accuracy than others. 
-  
-
- \begin{figure}[b!]
+  \begin{figure}[b!]
 \begin{center}
  \includegraphics[width=0.9\linewidth]{figures/classification/test_set_confusion_matrix.pdf}
 \end{center}
    \caption{Confusion matrix for the classification problem on the 815 microwell test set.}
 \label{test_set_confusion_matrix}
 \end{figure}
-
-
-
-%Then I run for more epoches, the loss almost go to 0 and training accuracy go up to 1 but validation accuracy improves a little bit to 0.65. It was overffiting. So I added dropout and more maxpooling, the validation accuracy went up to 0.68. But it was still overfitting, so I added the training set to 6514. The minum loss is 0.11 and best validation is 0.8 and training accuracy is 0.915. But by changed different models, adding fully connected layer or using pretrained, but validation accuracy did not improve. By adding data augmentation, the training accuracy go down, but validation accuracy did not go up. 
-%We have also tried learning rate 1e-2,1e-3,3e-4,1e-4, the best is 1e-4.
 
  \begin{figure*}[t!]
 \begin{center}
@@ -185,6 +172,22 @@ To obtain better accuracy, we have tried different optimzer like SGD and Adam. A
    \caption{The training cross-entropy loss (top) and training and validation accuracy (bottom) for the classification problem.}
 \label{classification_train_loss_train_and_val_loss}
 \end{figure*}
+
+For classification,  we first used one simple 3-conv,1-fully connected layer without any regularization to train 100 images.  We obtained overfitting, as the training loss went to 0 and the training accuracy  went to 1. However, the validation accuracy remained constant, equal to random guessing.  We then added more convolutional layers and more parameters in each of the convolution network, obtaining the model described in section~\ref{multidayCNN},  and training with more data, 4510 microwells.  We obtained 0.19 as the best validation loss , 0.8 as the best training accuracy and 0.6 as the best validation accuracy across all epochs (figure~\ref{classification_train_loss_train_and_val_loss}).  If we run for more epochs, then the training loss goes to zero and the training accuracy goes to one.  However, the validation accuracy does not improve.  This supports the decision of early stopping.  To improve generalization we then added dropout.  This improved the validation accuracy slightly, to 0.65.
+However, the best improvement is when we added more microwells to the training.  Then the validation accuracy improved to 0.8.  The test accuracy for this model is 0.77 (figure~\ref{test_set_confusion_matrix}). But it is still a little bit overfitting.
+We explored adding data augmentation for this model, but this did not appreciably improve the validation accuracy but lower the training accuracy. We think the reason is that the well images data already has enough noise since some well images are already flipped and some well images lose part of information. We also explored adding more pooling and regularization, but the validation accuracy does not improve.  We believe that more data will help to improve the generalization because it will allow the model to better capture biological noise.
+
+
+
+To obtain better accuracy, we tried different optimizers including like stochastic gradient descent and Adam. We found better performance with Adam. We also tried different learning rate and adding learning rate decay per 5 epoch. But learning rate 1e-4 without any decay returns higher accuracy than others. 
+  
+
+
+
+
+%Then I run for more epoches, the loss almost go to 0 and training accuracy go up to 1 but validation accuracy improves a little bit to 0.65. It was overffiting. So I added dropout and more maxpooling, the validation accuracy went up to 0.68. But it was still overfitting, so I added the training set to 6514. The minum loss is 0.11 and best validation is 0.8 and training accuracy is 0.915. But by changed different models, adding fully connected layer or using pretrained, but validation accuracy did not improve. By adding data augmentation, the training accuracy go down, but validation accuracy did not go up. 
+%We have also tried learning rate 1e-2,1e-3,3e-4,1e-4, the best is 1e-4.
+
 
 To validate our approach we generated saliency maps for several example images, shown in figure~\ref{saliency_maps}.  We should note that we did not perform data augmentation on any of the images, so that the shifting and rotation shown in the first and last example images are present in the real data.     The saliency maps show a clear indication that the convolutional filters are picking up the signal contained in the microwell.  The boundaries of the microwell contain only noise, and even when the images are rotated or shifted, the interior of the microwell is highlighted in the saliency map.  This is evidence that our convolutional model is correctly identifying the salient information contained in the images.
 
